@@ -6,7 +6,7 @@ set(MY_PROJECT_NAME bayan)
 project(${MY_PROJECT_NAME} VERSION ${PROJECT_VESRION})
 
 option(WITH_GOOGLE_TEST "Whether to build Google tets" ON)
-
+option(WITH_BOOST "Add boost libraries" ON)
 
 add_executable(${MY_PROJECT_NAME} main.cpp )
 
@@ -14,6 +14,16 @@ set_target_properties(${MY_PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
+if(WITH_BOOST)
+    find_package(Boost COMPONENTS program_options REQUIRED)
+    if(Boost_FOUND)
+    
+        include_directories(${Boost_INCLUDE_DIR})
+        link_directories(${Boost_LYBRARY_DIR})
+
+        target_link_libraries(${MY_PROJECT_NAME} ${Boost_LIBRARIES})
+    endif()
+endif()
 
 
 
