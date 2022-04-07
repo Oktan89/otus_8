@@ -1,5 +1,6 @@
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include "options.h"
 
 
@@ -10,13 +11,15 @@ int main(int argc, char*argv[])
     try
     {
         opt.parseCommandLine(argc, argv);
+        opt.print();
     }
-    catch (std::exception &e)
+    catch (exitOptionsProgramm &e)
     {
-        opt.printHelp();
         return 0;
     }
 
-    opt.print();
+     const auto scan_patch = opt.getScanPatch();   
+     boost::filesystem::path test(scan_patch[0]);
+     std::cout << test.generic_path() << std::endl;
     return 0;
 }

@@ -9,9 +9,8 @@ class exitOptionsProgramm : public std::exception {};
 
 class Options
 {
-    int level;
     po::options_description desc;//("Options bayan");
-    po::positional_options_description p;
+    //po::positional_options_description p;
     po::variables_map vm;
 
 public:
@@ -22,59 +21,89 @@ public:
     
     void parseCommandLine(int argc, char* argv[])
     {
-        // po::store(po::parse_command_line(argc, argv, desc), vm);
-        po::store(po::command_line_parser(argc, argv).
-          options(desc).positional(p).run(), vm);
-        po::notify(vm);
-        if(argc < 2)
+        try{
+            po::store(po::parse_command_line(argc, argv, desc), vm);
+            po::notify(vm);
+        }
+        catch(std::exception &e)
+        {
+            std::cout << e.what() << std::endl;
             throw exitOptionsProgramm();
+        }
+        
+        if(argc < 2)
+            printHelp();
     }
 
     void printHelp()
     {
         std::cout << "Utility for detecting duplicate files" << std::endl;
-        std::cout << "Usage: example [OPTION]... --scan_dir [dir]...\n";
-        std::cout << "  or   example [OPTION] -s [dir] --excl_dir [dir]...\n";
+        std::cout << "Usage: example bayan [OPTION]... -s [directory scan]... -e [directory to exclude]...\n";
+        std::cout << "\t  or   bayan [OPTION]... -s [directory scan]... -m [mask of file...]\n";
+        std::cout << "\t  or   bayan [OPTION]... -m [mask of file...]\n";
+        std::cout << "\t  or   bayan [OPTION]... -e [directory to exclude]...\n";
         std::cout << desc << std::endl;
+        throw exitOptionsProgramm();
     }
 
     void print()
     {
-        if (vm.count("help") || vm.empty())
+        if (vm.count("help"))
         {
-            std::cout << desc << std::endl;
-            throw exitOptionsProgramm();
+            printHelp();
         }
-        if (vm.count("scan_dir"))
+        if (vm.count("scan-dir"))
         {
-            const std::vector<std::string> &vec = vm["scan_dir"].as<std::vector<std::string>>();
-            std::cout <<"Directory to scan :";
-            std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(std::cout, " ")); 
-            std::cout << std::endl;
+            const std::vector<std::string> &vec = vm["scan-dir"].as<std::vector<std::string>>();
+            std::cout <<"Directory to scan :\n\t";
+            std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(std::cout, "\n\t")); 
+            std::cout << '\r';
         }
-        if (vm.count("excl_dir"))
+        if (vm.count("excl-dir"))
         {
-            const std::vector<std::string> &vec = vm["excl_dir"].as<std::vector<std::string>>();
-            std::cout <<"Directory to scan :";
-            std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(std::cout, " ")); 
-            std::cout << std::endl;
+            const std::vector<std::string> &vec = vm["excl-dir"].as<std::vector<std::string>>();
+            std::cout <<"Directory to exclude :\n\t";
+            std::copy(vec.begin(), vec.end(), std::ostream_iterator<std::string>(std::cout, "\n\t")); 
+            std::cout << '\r';
         }
-        std::cout << "Level :" << level << std::endl;
+        if (vm.count("level-scan"))
+        {
+            std::cout << "Level scan :" << vm["level-scan"].as<int>() << std::endl;
+        }
+        if (vm.count("file-size"))
+        {
+            std::cout << "The minimum file size from: " << vm["file-size"].as<std::size_t>() << " byte"<< std::endl;
+        }
+        if (vm.count("block-size"))
+        {
+            std::cout << "The size of block to read file: " << vm["block-size"].as<std::size_t>() << " byte"<< std::endl;
+        }
+    }
+
+    std::vector<std::string> getScanPatch()
+    {
+        if(vm.count("scan-dir"))
+            return vm["scan-dir"].as<std::vector<std::string>>();
+        return std::vector<std::string>();
     }
 private:
     void setOptions()
     {
         desc.add_options()
             ("help,h", "this help message")
-            ("scan_dir,s", po::value<std::vector<std::string>>(),
+            ("scan-dir,s", po::value<std::vector<std::string>>()->composing(),
                 "directories to scan (there may be several)")
-            ("excl_dir,e", po::value<std::vector<std::string>>(),
+            ("excl-dir,e", po::value<std::vector<std::string>>()->composing(),
                 "directories to exclude from scanning (there may be several)")
-            ("level_scan,l", po::value<int>(&level)->implicit_value(1)->default_value(0),
-                "scan level (1 - for all directories, 0 - only the specified directory without nested ones)");
-        po::positional_options_description p;
-        //p.add("scan_dir", argc);
-        p.add("excl_dir", -1);
+            ("level-scan,l", po::value<int>()->default_value(0),
+                "scan level-scan (1 - for all directories, 0 - only the specified directory without nested ones)")
+            ("file-size,f", po::value<std::size_t>()->default_value(1), 
+                "the minimum file size, by default, all files larger than 1 byte are checked.")
+            ("block-size,b", po::value<std::size_t>()->default_value(10), 
+                "the size of the block in bytes used to read files.");
+       // po::positional_options_description p;
+        //p.add("scan-dir", argc);
+       // p.add("excl-dir", -1);
     }
 
 };
