@@ -2,6 +2,7 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 #include <stdexcept>
+#include <set>
 
 namespace po = boost::program_options;
 
@@ -80,12 +81,53 @@ public:
         }
     }
 
-    std::vector<std::string> getScanPatch()
+    std::vector<boost::filesystem::path> getScanPath() const
     {
         if(vm.count("scan-dir"))
-            return vm["scan-dir"].as<std::vector<std::string>>();
-        return std::vector<std::string>();
+        {
+            // auto vec = vm["scan-dir"].as<std::vector<std::string>>();
+
+            std::vector<boost::filesystem::path> vec_path;
+            for(auto &p: vm["scan-dir"].as<std::vector<std::string>>())
+            {
+                vec_path.emplace_back(p);
+            }
+
+            return vec_path;
+        }
+            
+        return std::vector<boost::filesystem::path>();
     }
+
+    std::set<boost::filesystem::path> getExcludePath() const
+    {
+        
+        if(vm.count("excl-dir"))
+        {
+            auto vec = vm["excl-dir"].as<std::vector<std::string>>();
+            std::set<boost::filesystem::path> map_excl;
+            
+            for(auto &p: vec)
+            {
+               map_excl.insert(p);
+            }
+
+            return map_excl;
+        }
+        
+        return std::set<boost::filesystem::path>();
+    }
+
+    bool level() const
+    {
+        return vm["level-scan"].as<int>();
+    }
+
+    std::uintmax_t getFileSize() const
+    {
+        return vm["file-size"].as<std::uintmax_t>();
+    }
+    
 private:
     void setOptions()
     {
@@ -97,7 +139,7 @@ private:
                 "directories to exclude from scanning (there may be several)")
             ("level-scan,l", po::value<int>()->default_value(0),
                 "scan level-scan (1 - for all directories, 0 - only the specified directory without nested ones)")
-            ("file-size,f", po::value<std::size_t>()->default_value(1), 
+            ("file-size,f", po::value<std::uintmax_t>()->default_value(1), 
                 "the minimum file size, by default, all files larger than 1 byte are checked.")
             ("block-size,b", po::value<std::size_t>()->default_value(10), 
                 "the size of the block in bytes used to read files.");

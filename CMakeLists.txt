@@ -15,7 +15,7 @@ set_target_properties(${MY_PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 if(WITH_BOOST)
-    find_package(Boost COMPONENTS program_options REQUIRED)
+    find_package(Boost COMPONENTS program_options filesystem REQUIRED)
     if(Boost_FOUND)
     
         include_directories(${Boost_INCLUDE_DIR})
