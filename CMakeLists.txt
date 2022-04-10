@@ -8,7 +8,10 @@ project(${MY_PROJECT_NAME} VERSION ${PROJECT_VESRION})
 option(WITH_GOOGLE_TEST "Whether to build Google tets" ON)
 option(WITH_BOOST "Add boost libraries" ON)
 
-add_executable(${MY_PROJECT_NAME} main.cpp )
+add_executable(${MY_PROJECT_NAME} 
+    main.cpp 
+    identical.cpp
+)
 
 set_target_properties(${MY_PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
