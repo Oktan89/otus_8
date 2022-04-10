@@ -80,6 +80,7 @@ public:
         {
             std::cout << "The size of block to read file: " << vm["block-size"].as<std::size_t>() << " byte"<< std::endl;
         }
+        std::cout << std::endl;
     }
 
     std::vector<boost::filesystem::path> getScanPath() const
