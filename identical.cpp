@@ -76,7 +76,6 @@ bool Identical::mask_matching([[maybe_unused]]const fs::path &path) const
 
     std::string dest_path = path.filename().string();
     boost::algorithm::to_lower(dest_path);
-  
     const char* ptr = _opt.getMask().c_str();
     std::size_t index{0};
     auto next = [&ptr, &index](){++ptr; ++index;};

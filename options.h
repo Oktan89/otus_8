@@ -159,9 +159,6 @@ private:
             ("file-mask,m", po::value<std::string>()->default_value("*"),
             "masks of file names allowed for comparison (case-insensitive)");
 
-       // po::positional_options_description p;
-        //p.add("scan-dir", argc);
-       // p.add("excl-dir", -1);
     }
 
 };
