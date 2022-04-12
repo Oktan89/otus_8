@@ -2,6 +2,7 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>  
 #include <stdexcept>
 #include <set>
 
@@ -76,6 +77,10 @@ public:
         {
             std::cout << "The minimum file size from: " << vm["file-size"].as<std::size_t>() << " byte"<< std::endl;
         }
+        if (vm.count("file-mask"))
+        {
+            std::cout << "Masks of file names: " << vm["file-mask"].as<std::string>() << std::endl;
+        }
         if (vm.count("block-size"))
         {
             std::cout << "The size of block to read file: " << vm["block-size"].as<std::size_t>() << " byte"<< std::endl;
@@ -130,6 +135,12 @@ public:
         return vm["file-size"].as<std::uintmax_t>();
     }
     
+    std::string getMask() const
+    {   std::string mask = vm["file-mask"].as<std::string>();
+        boost::algorithm::to_lower(mask);
+        return mask;
+    }
+
 private:
     void setOptions()
     {
@@ -144,7 +155,10 @@ private:
             ("file-size,f", po::value<std::uintmax_t>()->default_value(1), 
                 "the minimum file size, by default, all files larger than 1 byte are checked.")
             ("block-size,b", po::value<std::size_t>()->default_value(10), 
-                "the size of the block in bytes used to read files.");
+                "the size of the block in bytes used to read files.")
+            ("file-mask,m", po::value<std::string>()->default_value("*"),
+            "masks of file names allowed for comparison (case-insensitive)");
+
        // po::positional_options_description p;
         //p.add("scan-dir", argc);
        // p.add("excl-dir", -1);

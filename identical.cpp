@@ -1,5 +1,7 @@
 #include "identical.h"
-
+#include <boost/algorithm/string.hpp>  
+#include <cctype>
+//Оставить только path остальное можно вызывать сразу из класса!!!
 void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size)
 {
     if (fs::is_directory(path) && !fs::is_symlink(path))
@@ -7,9 +9,9 @@ void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool 
         for (auto &dir : fs::directory_iterator(path))
             if (fs::is_regular_file(dir.path()))
             {
-                if (file_size <= fs::file_size(dir.path()))
+                auto f_size = fs::file_size(dir.path());
+                if (file_size <= f_size && mask_matching(dir.path()))
                 {
-                    auto f_size = fs::file_size(dir.path());
                     std::cout << dir.path() << " \tsize file: " << HumanReadable{f_size} << std::endl;
                     const auto [it, ok] = all_files.insert({f_size, std::vector<fs::path>{dir.path()}});
                     if (!ok)
@@ -66,5 +68,55 @@ void Identical::printIdentical() const
             }
         }
         std::cout << std::endl;
+    }
+}
+
+bool Identical::mask_matching([[maybe_unused]]const fs::path &path) const
+{
+
+    std::string dest_path = path.filename().string();
+    boost::algorithm::to_lower(dest_path);
+  
+    const char* ptr = _opt.getMask().c_str();
+    std::size_t index{0};
+    auto next = [&ptr, &index](){++ptr; ++index;};
+
+    for (;;)
+    {
+        switch (*ptr)
+        {
+            case '*':
+                
+                index = dest_path.find_first_of(*(++ptr), index);
+                break;
+            
+            case '\0': 
+            
+                return true;
+
+            case '?':
+                try
+                {
+                    dest_path.at(index);
+                }
+                catch(std::out_of_range const& exc) 
+                {
+                    return false;
+                }
+                next();
+                if(*ptr == '\0' && dest_path.size() > index)
+                        return false;
+                break;
+
+            default:
+                if(dest_path[index] == *ptr)
+                {
+                    next();
+                    if(*ptr == '\0' && dest_path.size() > index)
+                        return false;
+                }
+                else return false;
+                break;
+        }
     }
 }

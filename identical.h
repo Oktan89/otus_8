@@ -29,6 +29,8 @@ public:
 private:
     void recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size);
     
+    bool mask_matching(const fs::path &path) const;
+    
     struct HumanReadable
     {
         std::uintmax_t size{};
