@@ -20,9 +20,11 @@ public:
 
     Identical(const Options& opt) : _opt(opt){}
     
-    void scanFiles();
+    void scanOverlapFilesSize();
 
-    void printIdentical() const;
+    void searchIdentical();
+
+    void searchHash(const fs::path &patch, uintmax_t size);
 
     std::size_t getCountOverlapFiles() const noexcept {return map_eq_index.size();}
     

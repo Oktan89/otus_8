@@ -32,7 +32,7 @@ void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool 
     }
 }
 
-void Identical::scanFiles()
+void Identical::scanOverlapFilesSize()
 {
 
     for(auto &path : _opt.getScanPath())   
@@ -48,7 +48,7 @@ void Identical::scanFiles()
     }
 }
 
-void Identical::printIdentical() const
+void Identical::searchIdentical()
 {
     for(auto &index : map_eq_index)
     {
@@ -59,10 +59,11 @@ void Identical::printIdentical() const
             {
                 try{
                     std::cout << path << " size: "<< HumanReadable{fs::file_size(path)} <<std::endl;
+                    searchHash(path, fs::file_size(path));
                 }
                 catch(fs::filesystem_error &e)
                 {
-                    std::cout << "File "<< path <<" delete OS:" << e.what() << std::endl;
+                    std::cout << "File "<< path <<" possibly deleted by the operating system:" << e.what() << std::endl;
                 }
                 
             }
@@ -71,7 +72,22 @@ void Identical::printIdentical() const
     }
 }
 
-bool Identical::mask_matching([[maybe_unused]]const fs::path &path) const
+void Identical::searchHash(const fs::path &patch, [[maybe_unused]] uintmax_t size)
+{
+    char *test = new char[_opt.getBlockSize()];  
+    
+    memset(test, 0, _opt.getBlockSize());
+
+    std::ifstream file(patch.string(), std::ios::binary);
+
+    file.read(test, _opt.getBlockSize());
+  
+    std::cout << file.tellg() << std::endl;
+    std::cout << test << std::endl;
+    delete[] test;    
+}
+
+bool Identical::mask_matching(const fs::path &path) const
 {
 
     std::string dest_path = path.filename().string();

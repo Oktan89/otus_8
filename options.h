@@ -134,6 +134,11 @@ public:
     {
         return vm["file-size"].as<std::uintmax_t>();
     }
+
+    std::size_t getBlockSize() const
+    {
+        return vm["block-size"].as<std::size_t>();
+    }
     
     std::string getMask() const
     {   std::string mask = vm["file-mask"].as<std::string>();

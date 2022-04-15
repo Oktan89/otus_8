@@ -17,10 +17,10 @@ int main(int argc, char*argv[])
     }
 
     Identical test(opt);
-    test.scanFiles();
-    std::cout << "Count overlap files: " << test.getCountOverlapFiles() << std::endl;
+    test.scanOverlapFilesSize();
+    std::cout << "Count overlap files size: " << test.getCountOverlapFiles() << std::endl;
     
-    test.printIdentical();
+    test.searchIdentical();
 
     
     
