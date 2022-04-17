@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <boost/filesystem.hpp>
+#include <boost/crc.hpp>
 #include <vector>
 #include <set>
 #include "options.h"
@@ -26,12 +27,17 @@ public:
 
     void searchHash(const fs::path &patch, uintmax_t size);
 
+    
     std::size_t getCountOverlapFiles() const noexcept {return map_eq_index.size();}
     
 private:
+    void printOverlap(const std::vector<fs::path> &vec);
+
     void recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size);
     
     bool mask_matching(const fs::path &path) const;
+
+    uint32_t getcrc32(const char* block, std::size_t size_b);
     
     struct HumanReadable
     {

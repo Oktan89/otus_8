@@ -1,5 +1,8 @@
 #include "identical.h"
 #include <boost/algorithm/string.hpp>  
+#include <list>
+#include <algorithm>
+#include <unordered_set>
 #include <cctype>
 //Оставить только path остальное можно вызывать сразу из класса!!!
 void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size)
@@ -55,20 +58,21 @@ void Identical::searchIdentical()
         auto it = all_files.find(index);
         if(it != all_files.end())
         {
-            for(auto &path: it->second)
-            {
-                try{
-                    std::cout << path << " size: "<< HumanReadable{fs::file_size(path)} <<std::endl;
-                    searchHash(path, fs::file_size(path));
-                }
-                catch(fs::filesystem_error &e)
-                {
-                    std::cout << "File "<< path <<" possibly deleted by the operating system:" << e.what() << std::endl;
-                }
+            printOverlap(it->second);
+            // for(auto &path: it->second)
+            // {
+            //     try{
+            //         std::cout << path << " size: "<< HumanReadable{fs::file_size(path)} <<std::endl;
+            //         searchHash(path, fs::file_size(path));
+            //     }
+            //     catch(fs::filesystem_error &e)
+            //     {
+            //         std::cout << "File "<< path <<" possibly deleted by the operating system:" << e.what() << std::endl;
+            //     }
                 
-            }
+            // }
         }
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
 }
 
@@ -83,8 +87,102 @@ void Identical::searchHash(const fs::path &patch, [[maybe_unused]] uintmax_t siz
     file.read(test, _opt.getBlockSize());
   
     std::cout << file.tellg() << std::endl;
-    std::cout << test << std::endl;
+    for(std::size_t i =0; i < _opt.getBlockSize(); ++i)
+        std::cout << std::hex << (int)test[i] <<" ";
+    std::cout<<std::endl;
+    std::cout << "crc32 " << getcrc32(test, _opt.getBlockSize()) << std::endl;;
     delete[] test;    
+}
+
+void Identical::printOverlap(const std::vector<fs::path> &vec)
+{
+    std::vector<std::unique_ptr<std::ifstream>> files;
+    files.reserve(vec.size());
+
+    for(std::size_t i = 0; i < vec.size(); ++i)
+        files.emplace_back(std::make_unique<std::ifstream>(vec[i].string(), std::ios::binary));
+
+    std::size_t size_b = _opt.getBlockSize();
+    std::unique_ptr<char[]> block(new char[size_b]);
+    memset(block.get(), 0, size_b);   
+    
+
+    std::unordered_map<std::size_t, uint32_t> hash_block;
+    std::unordered_set<std::size_t> equal_files;
+    hash_block.reserve(vec.size());
+
+    bool start = true;
+    while(start)
+    {
+        for(std::size_t i = 0; i < files.size(); ++i)
+        {
+            if(files[i]->is_open())
+            {
+                files[i]->read(block.get(), size_b);
+                hash_block[i] = getcrc32(block.get(), size_b);
+            }
+        }
+
+        for(std::size_t i = 0; i < hash_block.size(); ++i)
+        {
+            for(std::size_t j = hash_block.size()-1; j > i; --j)
+            {
+                auto itone = hash_block.find(i);
+                auto ittwo = hash_block.find(j);
+                if(itone != hash_block.end() && ittwo != hash_block.end())
+                {
+                    if(itone->second == ittwo->second)
+                    {
+                        equal_files.insert(i);
+                        equal_files.insert(j);
+                    }
+                }
+            }
+        }
+
+        start = (equal_files.empty())? false : true;
+
+        for(std::size_t i = 0; i < files.size(); ++i)
+        {
+            auto it = equal_files.find(i);
+            if(it == equal_files.end())
+            {
+                files[i]->close();
+            }
+        }
+
+        // for(auto &&cr : hash_block)
+        //     std::cout << std::hex << cr.second <<" ";
+        // std::cout << std::endl;
+             
+        if (files.begin()->get()->eof()) 
+        {
+            // std::cout << "stream state is eof\n";
+            for(std::size_t i = 0; i < vec.size(); ++i)
+            {
+                auto it = equal_files.find(i);
+                if(it != equal_files.end())
+                {
+                    std::cout << vec[i] << " size: "<< HumanReadable{fs::file_size(vec[i])} <<std::endl;
+                }
+            }
+            std::cout << std::endl;
+            start = false;
+        }
+        else
+        {
+            memset(block.get(), 0, size_b);  
+            hash_block.clear();
+            equal_files.clear();  
+        } 
+    }
+}
+
+uint32_t Identical::getcrc32(const char* block, std::size_t size_b)
+{
+    boost::crc_32_type result;
+    result.process_bytes(block, size_b);
+    return result.checksum();
 }
 
 bool Identical::mask_matching(const fs::path &path) const
