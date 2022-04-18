@@ -32,7 +32,7 @@ public:
 private:
     void printOverlap(const std::vector<fs::path> &vec);
 
-    void recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size);
+    void recursive_dir(const fs::path &path, const set_path &epath);
     
     bool mask_matching(const fs::path &path) const;
 

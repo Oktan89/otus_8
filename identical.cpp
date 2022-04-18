@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include <cctype>
 
-void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size)
+void Identical::recursive_dir(const fs::path &path, const set_path &epath)
 {
     if (fs::is_directory(path) && !fs::is_symlink(path))
     {
@@ -13,7 +13,7 @@ void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool 
             if (fs::is_regular_file(dir.path()))
             {
                 auto f_size = fs::file_size(dir.path());
-                if (file_size <= f_size && mask_matching(dir.path()))
+                if (_opt.getFileSize() <= f_size && mask_matching(dir.path()))
                 {
                     std::cout << dir.path() << " \tsize file: " << HumanReadable{f_size} << std::endl;
                     const auto [it, ok] = all_files.insert({f_size, std::vector<fs::path>{dir.path()}});
@@ -24,12 +24,12 @@ void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool 
                     }
                 }
             }
-            else if (fs::is_directory(dir.path()) && level)
+            else if (fs::is_directory(dir.path()) && _opt.level())
             {
                 auto it = epath.find(dir.path().filename());
                 if (it == epath.end())
                 {
-                    recursive_dir(dir.path(), epath, level, file_size);
+                    recursive_dir(dir.path(), epath);
                 }
             }
     }
@@ -42,7 +42,7 @@ void Identical::scanOverlapFilesSize()
     {
         if(fs::exists(path))
         {
-            recursive_dir(path, _opt.getExcludePath(), _opt.level(), _opt.getFileSize());
+            recursive_dir(path, _opt.getExcludePath());
         }
         else
         {
@@ -121,21 +121,23 @@ void Identical::printOverlap(const std::vector<fs::path> &vec)
         }
 
         // for(auto &&cr : hash_block)
-        //     std::cout << std::hex << cr.second <<" ";
+        //     std::cout << cr.second <<" ";
         // std::cout << std::endl;
              
         if (files.begin()->get()->eof()) 
         {
             // std::cout << "stream state is eof\n";
+            bool overlap = false;
             for(std::size_t i = 0; i < vec.size(); ++i)
             {
                 auto it = equal_files.find(i);
                 if(it != equal_files.end())
                 {
-                    std::cout << vec[i] << " size: "<< HumanReadable{fs::file_size(vec[i])} <<std::endl;
+                    std::cout <<"[Overlap]: " <<vec[i] << " size: "<< HumanReadable{fs::file_size(vec[i])} <<std::endl;
+                    overlap = true;
                 }
             }
-            std::cout << std::endl;
+            if(overlap) std::cout << std::endl; 
             start = false;
         }
         else
