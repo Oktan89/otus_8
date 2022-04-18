@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <cctype>
-//Оставить только path остальное можно вызывать сразу из класса!!!
+
 void Identical::recursive_dir(const fs::path &path, const set_path &epath, bool level, std::size_t file_size)
 {
     if (fs::is_directory(path) && !fs::is_symlink(path))
@@ -59,43 +59,13 @@ void Identical::searchIdentical()
         if(it != all_files.end())
         {
             printOverlap(it->second);
-            // for(auto &path: it->second)
-            // {
-            //     try{
-            //         std::cout << path << " size: "<< HumanReadable{fs::file_size(path)} <<std::endl;
-            //         searchHash(path, fs::file_size(path));
-            //     }
-            //     catch(fs::filesystem_error &e)
-            //     {
-            //         std::cout << "File "<< path <<" possibly deleted by the operating system:" << e.what() << std::endl;
-            //     }
-                
-            // }
         }
-        //std::cout << std::endl;
     }
-}
-
-void Identical::searchHash(const fs::path &patch, [[maybe_unused]] uintmax_t size)
-{
-    char *test = new char[_opt.getBlockSize()];  
-    
-    memset(test, 0, _opt.getBlockSize());
-
-    std::ifstream file(patch.string(), std::ios::binary);
-
-    file.read(test, _opt.getBlockSize());
-  
-    std::cout << file.tellg() << std::endl;
-    for(std::size_t i =0; i < _opt.getBlockSize(); ++i)
-        std::cout << std::hex << (int)test[i] <<" ";
-    std::cout<<std::endl;
-    std::cout << "crc32 " << getcrc32(test, _opt.getBlockSize()) << std::endl;;
-    delete[] test;    
 }
 
 void Identical::printOverlap(const std::vector<fs::path> &vec)
 {
+    _hash = std::make_unique<bayan_boost_md5>();
     std::vector<std::unique_ptr<std::ifstream>> files;
     files.reserve(vec.size());
 
@@ -107,7 +77,7 @@ void Identical::printOverlap(const std::vector<fs::path> &vec)
     memset(block.get(), 0, size_b);   
     
 
-    std::unordered_map<std::size_t, uint32_t> hash_block;
+    std::unordered_map<std::size_t, std::string> hash_block;
     std::unordered_set<std::size_t> equal_files;
     hash_block.reserve(vec.size());
 
@@ -119,7 +89,7 @@ void Identical::printOverlap(const std::vector<fs::path> &vec)
             if(files[i]->is_open())
             {
                 files[i]->read(block.get(), size_b);
-                hash_block[i] = getcrc32(block.get(), size_b);
+                hash_block[i] = _hash->getHash(block.get(), size_b);
             }
         }
 
@@ -176,13 +146,6 @@ void Identical::printOverlap(const std::vector<fs::path> &vec)
             equal_files.clear();  
         } 
     }
-}
-
-uint32_t Identical::getcrc32(const char* block, std::size_t size_b)
-{
-    boost::crc_32_type result;
-    result.process_bytes(block, size_b);
-    return result.checksum();
 }
 
 bool Identical::mask_matching(const fs::path &path) const

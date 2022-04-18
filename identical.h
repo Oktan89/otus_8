@@ -1,10 +1,11 @@
 #pragma once
 #include <map>
 #include <boost/filesystem.hpp>
-#include <boost/crc.hpp>
 #include <vector>
 #include <set>
 #include "options.h"
+#include "basehash.h"
+
 namespace fs = boost::filesystem;
 
 class Identical
@@ -16,6 +17,7 @@ class Identical
     std::set<uintmax_t> map_eq_index;
 
     const Options &_opt;
+    std::unique_ptr<BaseHash> _hash;
 
 public:
 
@@ -25,9 +27,6 @@ public:
 
     void searchIdentical();
 
-    void searchHash(const fs::path &patch, uintmax_t size);
-
-    
     std::size_t getCountOverlapFiles() const noexcept {return map_eq_index.size();}
     
 private:
@@ -37,8 +36,6 @@ private:
     
     bool mask_matching(const fs::path &path) const;
 
-    uint32_t getcrc32(const char* block, std::size_t size_b);
-    
     struct HumanReadable
     {
         std::uintmax_t size{};

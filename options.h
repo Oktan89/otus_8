@@ -85,6 +85,10 @@ public:
         {
             std::cout << "The size of block to read file: " << vm["block-size"].as<std::size_t>() << " byte"<< std::endl;
         }
+        if (vm.count("hash"))
+        {
+            std::cout << "Hashing algorithms: " << vm["hash"].as<std::string>() << std::endl;
+        }
         std::cout << std::endl;
     }
 
@@ -162,8 +166,9 @@ private:
             ("block-size,b", po::value<std::size_t>()->default_value(10), 
                 "the size of the block in bytes used to read files.")
             ("file-mask,m", po::value<std::string>()->default_value("*"),
-            "masks of file names allowed for comparison (case-insensitive)");
-
+            "masks of file names allowed for comparison (case-insensitive)")
+            ("hash,c", po::value<std::string>()->default_value("crc32"),
+            "one of the available hashing algorithms is crc32 or md5");
     }
 
 };
