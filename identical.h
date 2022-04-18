@@ -21,7 +21,7 @@ class Identical
 
 public:
 
-    Identical(const Options& opt) : _opt(opt){}
+    Identical(const Options& opt) : _opt(opt){_hash = _opt.getHash();}
     
     void scanOverlapFilesSize();
 

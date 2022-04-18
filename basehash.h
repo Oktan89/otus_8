@@ -8,7 +8,7 @@ class BaseHash
 {
 public:
     virtual std::string getHash(const char* block, std::size_t size_b) = 0;
-    ~BaseHash() = default;
+    virtual ~BaseHash(){}
 };
 
 class bayan_boost_CRC32 : public BaseHash

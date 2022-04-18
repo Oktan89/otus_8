@@ -65,7 +65,6 @@ void Identical::searchIdentical()
 
 void Identical::printOverlap(const std::vector<fs::path> &vec)
 {
-    _hash = std::make_unique<bayan_boost_md5>();
     std::vector<std::unique_ptr<std::ifstream>> files;
     files.reserve(vec.size());
 

@@ -5,6 +5,7 @@
 #include <boost/algorithm/string.hpp>  
 #include <stdexcept>
 #include <set>
+#include "basehash.h"
 
 namespace po = boost::program_options;
 
@@ -12,8 +13,7 @@ class exitOptionsProgramm : public std::exception {};
 
 class Options
 {
-    po::options_description desc;//("Options bayan");
-    //po::positional_options_description p;
+    po::options_description desc;
     po::variables_map vm;
 
 public:
@@ -96,8 +96,6 @@ public:
     {
         if(vm.count("scan-dir"))
         {
-            // auto vec = vm["scan-dir"].as<std::vector<std::string>>();
-
             std::vector<boost::filesystem::path> vec_path;
             for(auto &p: vm["scan-dir"].as<std::vector<std::string>>())
             {
@@ -148,6 +146,25 @@ public:
     {   std::string mask = vm["file-mask"].as<std::string>();
         boost::algorithm::to_lower(mask);
         return mask;
+    }
+
+    std::unique_ptr<BaseHash> getHash() const
+    {
+        std::string s_hash = vm["hash"].as<std::string>();
+        if(s_hash == "crc32")
+        {
+            return std::make_unique<bayan_boost_CRC32>();
+        }
+        else if(s_hash == "md5")
+        {
+            return std::make_unique<bayan_boost_md5>();
+        }
+        else
+        {
+            std::cout << "Error name hashing aloritms.\n"
+                << "Set -ccrc32 or -cmd5" << std::endl;
+            throw exitOptionsProgramm();
+        }
     }
 
 private:
