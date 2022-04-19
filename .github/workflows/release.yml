@@ -17,7 +17,6 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install libboost-all-dev -y
       - run: cmake . -DWITH_GOOGLE_TEST=OFF -WITH_BOOST=ON
       - run: cmake --build .
-      - run: cmake --build . --target test
       - run: cmake --build . --target package
       - name: Set file name
         id: run_ls
