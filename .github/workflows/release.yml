@@ -1,0 +1,47 @@
+name: 'C++ bayan'
+
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - "v*"
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - run: cmake . -DWITH_GOOGLE_TEST=OFF -WITH_BOOST=ON
+      - run: cmake --build .
+      - run: cmake --build . --target test
+      - run: cmake --build . --target package
+      - name: Set file name
+        id: run_ls
+        run: echo ::set-output name=FILE_NAME::$(ls | grep *.deb)
+      - name: Cheсk package deb
+        run: dpkg -c ./${{steps.run_ls.outputs.FILE_NAME}}
+      - name: Create Release
+        if: ${{github.ref_type == 'tag'}}
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{steps.run_ls.outputs.FILE_NAME}}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        if: ${{github.ref_type == 'tag'}}
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{steps.run_ls.outputs.FILE_NAME}}
+          asset_name: ${{steps.run_ls.outputs.FILE_NAME}}
+          asset_content_type: application/vnd.debian.binary-package
