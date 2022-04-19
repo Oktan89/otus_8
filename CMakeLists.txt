@@ -5,7 +5,7 @@ set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 set(MY_PROJECT_NAME bayan)
 project(${MY_PROJECT_NAME} VERSION ${PROJECT_VESRION})
 
-option(WITH_GOOGLE_TEST "Whether to build Google tets" ON)
+option(WITH_GOOGLE_TEST "Whether to build Google tets" OFF)
 option(WITH_BOOST "Add boost libraries" ON)
 
 add_executable(${MY_PROJECT_NAME} 
